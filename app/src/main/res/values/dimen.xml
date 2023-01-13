@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="video_float_width">320dp</dimen>
+    <dimen name="video_float_height">180dp</dimen>
+    <dimen name="margin_width">30dp</dimen>
+</resources>

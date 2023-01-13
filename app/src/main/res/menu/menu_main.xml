@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.android.permissiontest.MainActivity">
+    <item
+        android:id="@+id/action_settings_off"
+        android:orderInCategory="100"
+        android:title="设置关灯时间"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_settings_threshold"
+        android:orderInCategory="100"
+        android:title="设置关灯阈值"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_settings_warn"
+        android:orderInCategory="100"
+        android:title="设置提醒时间"
+        app:showAsAction="never" />
+</menu>
