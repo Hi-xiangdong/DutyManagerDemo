@@ -23,21 +23,6 @@ android {
         }
     }
 
-    signingConfigs {
-        release {
-            storeFile file('Hikvision.jks')
-            storePassword 'hikvision'
-            keyAlias 'hikvision'
-            keyPassword 'hikvision'
-        }
-        debug {
-            storeFile file('Hikvision.jks')
-            storePassword 'hikvision'
-            keyAlias 'hikvision'
-            keyPassword 'hikvision'
-        }
-    }
-
     buildTypes {
         debug {
             minifyEnabled false
