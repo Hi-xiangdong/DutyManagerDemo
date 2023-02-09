@@ -13,7 +13,8 @@ import java.lang.Exception
 object SmsUtil {
     fun sendMessage(context: Context, number: String, content: String) {
         try {
-            val smsManager = context.getSystemService(SmsManager::class.java)
+//            val smsManager = context.getSystemService(SmsManager::class.java)
+            val smsManager = SmsManager.getDefault()
             smsManager.sendTextMessage(
                 number, null, content,
                 null, null

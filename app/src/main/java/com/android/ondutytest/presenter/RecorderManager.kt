@@ -21,16 +21,16 @@ import androidx.lifecycle.LifecycleRegistry
 import com.android.ondutytest.DutyApplication
 import com.android.ondutytest.util.LogUtil
 import com.android.ondutytest.util.TimeUtil
+import com.android.ondutytest.util.ToastUtil
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
-import java.lang.IllegalStateException
-import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.IllegalStateException
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -49,13 +49,22 @@ class RecorderManager(private val context: Context) {
     private var camera: Camera? = null
     private lateinit var customLifecycle: CustomLifeCycle
     private lateinit var cameraExecutor: ExecutorService
+    private var lensFacing = CameraSelector.LENS_FACING_BACK
 
     private var mDisposable: Disposable? = null
     private var mRecordSeconds = 0
 
     private val outputDirectory: String by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) "${Environment.DIRECTORY_DCIM}/CameraX/"
-        else "${DutyApplication.instance.getExternalFilesDir(Environment.DIRECTORY_DCIM)}/CameraX"
+        else "${context.getExternalFilesDir(Environment.DIRECTORY_DCIM)}/CameraX"
+    }
+
+    private fun hasBackCamera(): Boolean {
+        return cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
+    }
+
+    private fun hasFrontCamera(): Boolean {
+        return cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
     }
 
     fun startCamera(previewView: PreviewView, cameraRecordTime: TextView) {
@@ -68,43 +77,55 @@ class RecorderManager(private val context: Context) {
             cameraProvider = cameraProviderFuture.get()
 
             cameraProvider?.let { customLifecycle.onResume() }
-            //显示信息
-            val metrics = DisplayMetrics().also {
-                previewView.display.getRealMetrics(it)
+
+            lensFacing = when {
+                hasBackCamera() -> CameraSelector.LENS_FACING_BACK
+                hasFrontCamera() -> CameraSelector.LENS_FACING_FRONT
+                else -> throw IllegalStateException("Back and front camera are unavailable")
             }
-            //输出图片和预览的比例
-            val aspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
-            //显示角度
-            val rotation = previewView.display.rotation
-            val localCameraProvider = cameraProvider ?: throw IllegalStateException(
-                "Camera initialization failed."
-            )
-
-            //相机预览配置
-            preview = Preview.Builder()
-                .setTargetAspectRatio(aspectRatio)
-                .setTargetRotation(rotation)
-                .build()
-
-            val videoCaptureConfig = VideoCapture.DEFAULT_CONFIG.config
-            videoCapture = VideoCapture.Builder
-                .fromConfig(videoCaptureConfig)
-                .build()
-            localCameraProvider.unbindAll()
-
-            try {
-                //用lifecycle绑定用例和相机
-                camera = localCameraProvider.bindToLifecycle(
-                    customLifecycle, CameraSelector.DEFAULT_BACK_CAMERA, preview, videoCapture
-                )
-                preview?.setSurfaceProvider(previewView.surfaceProvider)
-                //调整到这里使预览打开的时候开始录像
-                startRecording(cameraRecordTime)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            bindCameraUseCases(previewView, cameraRecordTime)
         }, ContextCompat.getMainExecutor(context.applicationContext))
+    }
 
+    private fun bindCameraUseCases(previewView: PreviewView, cameraRecordTime: TextView) {
+        //显示信息
+        val metrics = DisplayMetrics().also {
+            previewView.display.getRealMetrics(it)
+        }
+        //输出图片和预览的比例
+        val aspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+        //显示角度
+        val rotation = previewView.display.rotation
+        val localCameraProvider = cameraProvider ?: throw IllegalStateException(
+            "Camera initialization failed."
+        )
+        val cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
+
+        //相机预览配置
+        preview = Preview.Builder()
+            .setTargetAspectRatio(aspectRatio)
+            .setTargetRotation(rotation)
+            .build()
+
+        localCameraProvider.unbindAll()
+
+        val videoCaptureConfig = VideoCapture.DEFAULT_CONFIG.config
+        videoCapture = VideoCapture.Builder
+            .fromConfig(videoCaptureConfig)
+            .build()
+
+        try {
+            //用lifecycle绑定用例和相机
+            camera = localCameraProvider.bindToLifecycle(
+                customLifecycle, cameraSelector, preview, videoCapture
+            )
+            preview?.setSurfaceProvider(previewView.surfaceProvider)
+            //调整到这里使预览打开的时候开始录像
+            startRecording(cameraRecordTime)
+        } catch (e: Exception) {
+            LogUtil.e("相机打开错误")
+            e.printStackTrace()
+        }
     }
 
     private fun aspectRatio(width: Int, height: Int): Int {
@@ -163,6 +184,7 @@ class RecorderManager(private val context: Context) {
             cameraExecutor,
             object : VideoCapture.OnVideoSavedCallback {
                 override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
+                    ToastUtil.showShortToast(context, "文件已保存")
                     LogUtil.d("文件已保存")
                 }
 

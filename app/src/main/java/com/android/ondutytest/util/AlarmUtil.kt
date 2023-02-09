@@ -2,6 +2,8 @@ package com.android.ondutytest.util
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -26,17 +28,22 @@ object AlarmUtil {
         val intent = Intent(context, AlarmBroadcast::class.java)
         var pendingIntent: PendingIntent? = null
         when (type) {
+            //设置值日提醒
             0 -> {
+                LogUtil.i("设置值日提醒")
                 intent.putExtra("action", 0)
                 intent.putExtras(bundle)
                 pendingIntent = PendingIntent.getBroadcast(context, Constant.WARN_REQUEST_CODE,
-                    intent, 0)
+                    intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
+                )
             }
+            //设置关灯提醒
             1 -> {
                 intent.putExtra("action", 1)
                 intent.putExtras(bundle)
                 pendingIntent = PendingIntent.getBroadcast(context, Constant.TURNOFF_REQUEST_CODE,
-                    intent, 0)
+                    intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
+                )
             }
         }
 
@@ -44,8 +51,9 @@ object AlarmUtil {
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
-            AlarmManager.INTERVAL_DAY,
+            1000 * 60 * 60 * 24,
             pendingIntent
         )
+        LogUtil.i("设置完成")
     }
 }

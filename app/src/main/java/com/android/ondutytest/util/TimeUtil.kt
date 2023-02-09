@@ -21,7 +21,7 @@ object TimeUtil {
     fun getFormatTime(seconds: Int): String {
         var hour = 0
         var minute = 0
-        var second = 0
+        val second: Int
         if (seconds >= 60) {
             minute = seconds / 60
             second = seconds % 60

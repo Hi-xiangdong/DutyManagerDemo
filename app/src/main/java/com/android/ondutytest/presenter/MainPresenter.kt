@@ -1,11 +1,8 @@
 package com.android.ondutytest.presenter
 
 import android.content.Context
-import android.telephony.SmsManager
-import androidx.core.content.ContextCompat.getSystemService
 import com.android.ondutytest.DutyApplication
 import com.android.ondutytest.model.database.PersonInfo
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -52,7 +49,7 @@ class MainPresenter(private val context: Context) {
      * @return 值日生字符串
      */
     fun getNameStringFromList(list: List<PersonInfo>?): String {
-        if (list == null) return "值日生：暂无安排"
+        if (list.isNullOrEmpty()) return "值日生：暂无安排"
         var res = "值日生："
         for (person in list) {
             res = res + person.name + " "
@@ -60,7 +57,7 @@ class MainPresenter(private val context: Context) {
         return res
     }
 
-    fun getAdminFormList(list: List<PersonInfo>): PersonInfo? {
+    fun getAdminFromList(list: List<PersonInfo>): PersonInfo? {
         for (person in list) {
             if (person.isAdmin) {
                 return person

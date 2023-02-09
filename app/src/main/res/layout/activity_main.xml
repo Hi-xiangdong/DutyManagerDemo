@@ -20,15 +20,20 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+<!--    <include layout="@layout/fragment_main" />-->
+    <FrameLayout
+        android:id="@+id/fm_fg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/design_fab_size_normal"
+        android:layout_height="@dimen/design_fab_size_normal"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/margin_width"
         android:layout_marginBottom="@dimen/margin_width"
-        android:src="@mipmap/sign"/>
+        android:src="@mipmap/signin"
+        app:fabSize="normal"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

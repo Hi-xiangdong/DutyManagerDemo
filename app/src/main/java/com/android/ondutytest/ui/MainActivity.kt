@@ -1,5 +1,6 @@
 package com.android.ondutytest.ui
 
+import android.Manifest
 import android.app.TimePickerDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -14,19 +15,23 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.android.ondutytest.R
+import com.android.ondutytest.constant.Constant
 import com.android.ondutytest.databinding.ActivityMainBinding
+import com.android.ondutytest.presenter.MainPresenter
 import com.android.ondutytest.presenter.RecorderManager
+import com.android.ondutytest.ui.fragment.MainFragment
 import com.android.ondutytest.ui.widget.CustomDialog
-import com.android.ondutytest.util.AlarmUtil
-import com.android.ondutytest.util.DeviceUtil
-import com.android.ondutytest.util.ToastUtil
+import com.android.ondutytest.util.*
 import com.android.ondutytest.viewmodel.PersonInfoViewModel
 import com.lzf.easyfloat.EasyFloat
 import com.lzf.easyfloat.enums.ShowPattern
 import com.lzf.easyfloat.enums.SidePattern
+import permissions.dispatcher.NeedsPermission
+import permissions.dispatcher.RuntimePermissions
 import java.util.*
 import kotlin.collections.ArrayList
 
+@RuntimePermissions
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -42,18 +47,25 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-        //找到fragment
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+//        //找到fragment
+//        val navController = findNavController(R.id.nav_host_fragment_content_main)
+//        appBarConfiguration = AppBarConfiguration(navController.graph)
+//        setupActionBarWithNavController(navController, appBarConfiguration)
+
+        lightThreshold = SPUtil.get(this, Constant.SP_LIGHT_THRESHOLD, 10) as Int
 
         initView()
+        LogUtil.i(DeviceUtil.getLightSensitivity().toString())
+        supportFragmentManager.beginTransaction().let {
+            it.replace(R.id.fm_fg, MainFragment())
+            it.commit()
+        }
     }
 
     private fun initView() {
         binding.fab.setOnClickListener {
-            DeviceUtil.changeAmbientLight()
-            takeVideo()
+            DeviceUtil.changeAmbientLight(true, Constant.BREATHE_LAMP_GREEN)
+            takeVideoWithPermissionCheck()
         }
     }
 
@@ -64,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            //设置关灯提醒
             R.id.action_settings_off -> {
                 val calendar = Calendar.getInstance()
                 val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
@@ -75,23 +88,25 @@ class MainActivity : AppCompatActivity() {
                         set(Calendar.MINUTE, minuteThis)
                     }
                     val bundle = Bundle()
-                    bundle.putBoolean("isSend", DeviceUtil.getLightSensitivity() > lightThreshold)
                     bundle.putString("number", viewModel.admin?.phoneNumber)
                     AlarmUtil.setAlarm(calendarThis, this, 1, bundle)
                 }, hourOfDay, minute, true).show()
                 true
             }
+            //设置值日提醒
             R.id.action_settings_warn -> {
                 val calendar = Calendar.getInstance()
                 val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
                 val minute = calendar.get(Calendar.MINUTE)
                 TimePickerDialog(this, { _, hourThis, minuteThis ->
+                    ToastUtil.showShortToast(this, "设置成功")
                     val calendarThis = Calendar.getInstance().apply {
                         set(Calendar.HOUR_OF_DAY, hourThis)
                         set(Calendar.MINUTE, minuteThis)
                     }
                     val bundle = Bundle()
                     if (viewModel.personOnDuty.isNullOrEmpty()) {
+                        LogUtil.i("值日生为空")
                         return@TimePickerDialog
                     }
                     val nameList = ArrayList<String>()
@@ -100,10 +115,11 @@ class MainActivity : AppCompatActivity() {
                         numberList.add(person.phoneNumber)
                         nameList.add(person.name)
                     }
+                    LogUtil.i(numberList.toString())
+                    LogUtil.i(nameList.toString())
                     bundle.putStringArrayList("name", nameList)
                     bundle.putStringArrayList("number", numberList)
                     AlarmUtil.setAlarm(calendarThis, this, 0, bundle)
-                    ToastUtil.showShortToast(this, "设置成功")
                 }, hourOfDay, minute, true).show()
                 true
             }
@@ -134,6 +150,7 @@ class MainActivity : AppCompatActivity() {
                 view.findViewById<Button>(R.id.bt_confirm).setOnClickListener {
                     dialog.dismiss()
                     lightThreshold = seekBar.progress
+                    SPUtil.put(this, Constant.SP_LIGHT_THRESHOLD, lightThreshold)
                     ToastUtil.showShortToast(this, "阈值设置成功")
                 }
                 true
@@ -142,7 +159,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun takeVideo() {
+    @NeedsPermission(Manifest.permission.CAMERA)
+    fun takeVideo() {
         val view = LayoutInflater.from(this).inflate(R.layout.recorder_layout, null)
         val params = ViewGroup.LayoutParams(
             resources.getDimensionPixelSize(R.dimen.video_float_width),
@@ -164,5 +182,14 @@ class MainActivity : AppCompatActivity() {
                     recordManager.stopRecording()
                 }
             }.show()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        onRequestPermissionsResult(requestCode, grantResults)
     }
 }

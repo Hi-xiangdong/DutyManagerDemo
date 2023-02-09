@@ -18,31 +18,23 @@ object LogUtil {
 
     private fun getFileName() = Thread.currentThread().stackTrace[STACK_INDEX].fileName
 
-
     private fun getMethodName() = Thread.currentThread().stackTrace[STACK_INDEX].methodName
 
     private fun getLineNumber() = Thread.currentThread().stackTrace[STACK_INDEX].lineNumber.toString()
 
-
     private fun getHyperlinkLog() = ".(" + getFileName() + ":" + getLineNumber() + ")" + getMethodName()
-
-
-    private fun getLogMessage(): String {
-        return "File:" + getFileName() + "--->Method:" + getMethodName() +
-                "--->Line:" + getLineNumber()
-    }
 
     @JvmStatic
     fun v(msg: String) {
         if (BuildConfig.DEBUG) {
-            Log.v(TAG, msg + "--->" + getLogMessage())
+            Log.v(TAG, msg + "--->" + getHyperlinkLog())
         }
     }
 
     @JvmStatic
     fun d(msg: String) {
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, msg + "--->" + getLogMessage())
+            Log.d(TAG, msg + "--->" + getHyperlinkLog())
         }
     }
 
@@ -53,7 +45,7 @@ object LogUtil {
 
     @JvmStatic
     fun w(msg: String) {
-        Log.w(TAG, msg + "--->" + getLogMessage())
+        Log.w(TAG, msg + "--->" + getHyperlinkLog())
     }
 
     @JvmStatic

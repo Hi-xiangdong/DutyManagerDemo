@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.ondutytest">
+    package="com.android.ondutytest"
+    android:sharedUserId="android.uid.system">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -37,6 +38,9 @@
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".AlarmBroadcast"
+            android:process=":remote"/>
     </application>
 
 </manifest>

@@ -1,14 +1,10 @@
 package com.android.ondutytest.ui.fragment
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.ImageView
 import android.widget.ListView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -19,16 +15,9 @@ import com.android.ondutytest.constant.Constant
 import com.android.ondutytest.databinding.FragmentMainBinding
 import com.android.ondutytest.model.database.PersonInfo
 import com.android.ondutytest.presenter.MainPresenter
-import com.android.ondutytest.presenter.RecorderManager
 import com.android.ondutytest.ui.widget.CustomDialog
-import com.android.ondutytest.util.DeviceUtil
-import com.android.ondutytest.util.ExcelUtil
-import com.android.ondutytest.util.LogUtil
-import com.android.ondutytest.util.ToastUtil
+import com.android.ondutytest.util.*
 import com.android.ondutytest.viewmodel.PersonInfoViewModel
-import com.lzf.easyfloat.EasyFloat
-import com.lzf.easyfloat.enums.ShowPattern
-import com.lzf.easyfloat.enums.SidePattern
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -50,7 +39,7 @@ class MainFragment : Fragment(), View.OnClickListener {
 
     private val binding get() = _binding!!
     private var mDisposable: Disposable? = null
-    private val viewModel by lazy { ViewModelProvider(this).get(PersonInfoViewModel::class.java) }
+    private val viewModel by lazy { ViewModelProvider(requireActivity()).get(PersonInfoViewModel::class.java) }
     private val presenter by lazy { MainPresenter(requireContext()) }
 
     override fun onCreateView(
@@ -58,7 +47,6 @@ class MainFragment : Fragment(), View.OnClickListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -69,7 +57,9 @@ class MainFragment : Fragment(), View.OnClickListener {
         lifecycleScope.launch(Dispatchers.Default) {
             viewModel.personList = presenter.loadPersonInfo() as ArrayList<PersonInfo>
             LogUtil.i(viewModel.personList.toString())
-            viewModel.admin = presenter.getAdminFormList(viewModel.personList)
+            viewModel.admin = presenter.getAdminFromList(viewModel.personList)
+            //更新当前值日生信息
+            viewModel.updatePersonList(viewModel.personList)
             withContext(Dispatchers.Main) {
                 binding.tvPerson.text = presenter.getNameStringFromList(
                     presenter.judgeWhoIsOnDuty(viewModel.personList)
@@ -98,14 +88,17 @@ class MainFragment : Fragment(), View.OnClickListener {
 
     private fun importData() {
         if (DutyApplication.instance.usbList.isEmpty()) {
+            LogUtil.i("U盘未插入")
             ToastUtil.showShortToast(requireContext(), "U盘未插入")
             return
         }
         val path = DutyApplication.instance.usbList[0].path + File.separator + Constant.PATH_EXCEL
         if (!File(path).exists()) {
+            LogUtil.i("路径不存在")
             ToastUtil.showShortToast(requireContext(), "路径不存在")
             return
         }
+        LogUtil.i("导入数据")
         val data = ExcelUtil.getExcelFileName(path, "xlsx")
 
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.popupwindow_layout, null)
@@ -147,6 +140,7 @@ class MainFragment : Fragment(), View.OnClickListener {
         viewModel.personInfoLiveData.observe(viewLifecycleOwner) {
             viewModel.personOnDuty = presenter.judgeWhoIsOnDuty(it)
             binding.tvPerson.text = presenter.getNameStringFromList(viewModel.personOnDuty)
+            DutyApplication.instance.personOnDuty = viewModel.personOnDuty
         }
 
         //设置监听温湿度变化的监听
