@@ -19,6 +19,7 @@ class DutyApplication : Application() {
     //usb列表
     lateinit var usbList: ArrayList<SDCardInfo>
     var personOnDuty: List<PersonInfo>? = null
+    var admin: PersonInfo? = null
 
     companion object {
         lateinit var instance: DutyApplication

@@ -23,4 +23,6 @@ object Constant {
 
     const val BREATHE_LAMP_GREEN = 0
     const val BREATHE_LAMP_RED = 1
+
+    const val BLUETOOTH_DEVICE = "peripheral|84:C2:E4:03:02:02"
 }

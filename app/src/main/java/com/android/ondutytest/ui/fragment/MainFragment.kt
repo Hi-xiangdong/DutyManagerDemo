@@ -58,6 +58,7 @@ class MainFragment : Fragment(), View.OnClickListener {
             viewModel.personList = presenter.loadPersonInfo() as ArrayList<PersonInfo>
             LogUtil.i(viewModel.personList.toString())
             viewModel.admin = presenter.getAdminFromList(viewModel.personList)
+            DutyApplication.instance.admin = viewModel.admin
             //更新当前值日生信息
             viewModel.updatePersonList(viewModel.personList)
             withContext(Dispatchers.Main) {
