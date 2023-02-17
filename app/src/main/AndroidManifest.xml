@@ -47,14 +47,6 @@
         <receiver android:name=".AlarmBroadcast"
             android:process=":remote"/>
 
-        <receiver android:name=".BluetoothBroadcast"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.bluetooth.device.action.FOUND"/>
-                <action android:name="android.bluetooth.adapter.action.DISCOVERY_STARTED"/>
-                <action android:name="android.bluetooth.adapter.action.DISCOVERY_FINISHED"/>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

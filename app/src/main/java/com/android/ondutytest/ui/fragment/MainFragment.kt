@@ -1,5 +1,6 @@
 package com.android.ondutytest.ui.fragment
 
+import android.bluetooth.BluetoothAdapter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -128,6 +129,7 @@ class MainFragment : Fragment(), View.OnClickListener {
         dialog.show()
     }
 
+    //监听温湿度
     private fun updateTemAndHum() {
         binding.tvTem.text = "温度：${DeviceUtil.getTemperature()}"
         binding.tvHumidity.text = "湿度：${DeviceUtil.getHumidity()}"
